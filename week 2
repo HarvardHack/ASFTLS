@@ -1,0 +1,322 @@
+week 2 :  homework 2  (distance and dimension reduction)
+
+q. 2.1.1: 31
+
+sum(tissue=="hippocampus")
+##to answer this question for all tissues look at
+table(tissue)
+
+q. 2.1.2: 152.5662
+
+sqrt( crossprod(e[,3]-e[,45]) )
+## or
+sqrt( sum((e[,3]-e[,45])^2 ))
+
+q. 2.1.3: 41.01153
+
+sqrt( crossprod(e["210486_at",]-e["200805_at",]) )
+## or
+sqrt( sum((e["210486_at",]-e["200805_at",])^2 ))
+
+q. 2.1.4: 493506225
+
+##every pair of rows has an entry:
+nrow(e)^2
+
+q. 2.1.5: 17766
+
+   length(d)
+
+"Because we take advantage of symmetry: only lower triangular matrix is stored thus only ncol(e)*(ncol(e)-1)/2 values."
+
+q 2.2.1 :  -0.9999998
+
+           cor(s$u[,1],m)
+
+q.2.2.2: s$d * t(s$v)
+
+         s$u %*% s$d * t(s$v) 
+
+q. 2.2.3:  40.62416
+          realdistance = sqrt(crossprod(e[,3]-e[,45]))
+          approxdistance = sqrt(crossprod(z[1:2,3]-z[1:2,45]))
+          abs(realdistance - approxdistance)
+
+q. 2.2.4: 7
+ks = 1:189
+realdistance = sqrt(crossprod(e[,3]-e[,45]))
+approxdistances = sapply(ks,function(k){
+    sqrt(crossprod(z[1:k,3,drop=FALSE]-z[1:k,45,drop=FALSE] )) 
+  })
+percentdiff = 100*abs(approxdistances - realdistance)/realdistance
+plot(ks,percentdiff) ##take a look
+min(ks[which(percentdiff < 10)])
+
+q. 2.2.5: 0.8598592
+          approxdistances = sqrt(apply(z[1:2,-3]-z[1:2,3],2,crossprod))
+          plot(distances,approxdistances) ##take a look
+          cor(distances,approxdistances,method="spearman")
+ 
+q. 2.3.1: -1 & -1
+          cor(z[1,],mds[,1])
+          cor(z[2,],mds[,2])
+
+q. 2.3.2: " multiply z[,1] and z[,2] by -1 "
+
+q. 2.3.3: 1
+          which.max(cor(sampleInfo$g,t(z)))
+
+0.6236858
+max(cor(sampleInfo$g,t(z)))
+
+6
+which.max(cor(sampleInfo$g,t(z))[-1]) + 1
+
+q. 2.3.4: 1
+          which.max(cor( as.numeric(month), t(z)))
+
+          0.8297915
+          max(cor( as.numeric(month), t(z)))
+          table(sampleInfo$g,month)
+
+
+q.2.3.5:  chrY
+
+result = split(s$u[,5],geneAnnotation$CHR)
+result = result[ which(names(result)!="chrUn") ]
+boxplot(result,range=0)
+boxplot(result,range=0,ylim=c(-0.025,0.025))
+medians = sapply(result,median)
+names(result)[ which.max(medians) ]
+
+
+
+WEEK 2 homework 3  (clustering)
+
+q. 2.4.1: 19 and 14 
+
+hc = hclust( dist( t(x)))
+plot(hc)
+
+q. 2.4.2: 0.8986657
+
+set.seed(1)
+m = 10000
+n = 24
+nc = replicate(100,{
+x = matrix(rnorm(m*n),m,n)
+hc = hclust( dist( t(x)))
+length(unique(cutree(hc,h=143)))
+})
+plot(table(nc)) ## look at the distribution
+popsd(nc)
+
+q. 2.4.3: Date is driving the clusters 
+
+mds=cmdscale(dist(t(geneExpression)))
+set.seed(10)
+result=kmeans(t(geneExpression),5)
+mypar(1,1)
+plot(mds,bg=result$cl,pch=21)
+table(sampleInfo$group,result$cluster)
+table(sampleInfo$date,result$cluster)
+##looks better if we re-order:
+table(sampleInfo$date,result$cluster)[,c(4,1,5,3,2)]
+
+q. 2.5.1: A group of chrY genes are higher in group 0 and appear to drive the clustering. Within those clusters there appears to be clustering by month. 
+
+##load libraries
+library(rafalib)
+library(gplots)
+library(matrixStats)
+library(RColorBrewer)
+##make colors
+cols = colorRampPalette(rev(brewer.pal(11,"RdBu")))(25)
+gcol=brewer.pal(3,"Dark2")
+gcol=gcol[sampleInfo$g+1]
+
+##make lables: remove 2005 since it's common to all
+labcol= gsub("2005-","",sampleInfo$date)  
+
+##pick highly variable genes:
+sds =rowMads(geneExpression)
+ind = order(sds,decreasing=TRUE)[1:25]
+
+## make heatmap
+heatmap.2(geneExpression[ind,],
+          col=cols,
+          trace="none",
+          scale="row",
+          labRow=geneAnnotation$CHR[ind],
+          labCol=labcol,
+          ColSideColors=gcol,
+          key=FALSE)
+
+
+q. 2.5.2: There is no relationship between g and x but with 8,793 tests some will appear significant by chance. Selecting genes with the t-test gives us a deceiving result. 
+
+library(gplots)
+library(matrixStats)
+library(genefilter)
+library(RColorBrewer)
+cols = colorRampPalette(rev(brewer.pal(11,"RdBu")))(25)
+
+ttest = rowttests(x,g)
+sds = rowSds(x)
+Indexes = list(t=order(ttest$p.value)[1:50], s=order(-sds)[1:50])
+for(ind in Indexes){
+ heatmap.2(x[ind,],
+          col=cols,
+          trace="none",
+          scale="row",
+          labCol=g,
+          key=FALSE)
+ }
+
+
+WEEK 2 homework 4 (Basic Machine Learning)
+
+q. 2.6.1: 0.1049475
+
+mean(y[x==176])
+
+q. 2.6.2: 168
+
+xs = seq(160,178)
+pr =sapply(xs,function(x0) mean(y[x==x0]))
+plot(xs,pr)
+abline(h=0.5)
+abline(v=168)
+
+
+q. 2.7.1: 0.5480233
+
+fit=loess(Y~X)
+predict(fit,newdata=data.frame(X=168))
+
+##Here is a plot
+xs = seq(160,178)
+Pr =sapply(xs,function(x0) mean(Y[X==x0]))
+plot(xs,Pr)
+fitted=predict(fit,newdata=data.frame(X=xs))
+lines(xs,fitted)
+
+q. 2.7.2: 0.05755689
+
+##plot plots are optional
+set.seed(5)
+B = 1000
+N = 250
+xs = seq(160,178)
+plot(xs,xs,ylim=c(0,1),type="l")
+res = replicate(B,{
+  ind = sample(length(y),N)
+  Y = y[ind]
+  X = x[ind]
+  fit=loess(Y~X)
+  ##optional plots
+  fitted=predict(fit,newdata=data.frame(X=xs))
+  lines(xs,fitted)
+  estimate = predict(fit,newdata=data.frame(X=168))
+  return(estimate)
+  })
+popsd(res)
+
+q. 2.8.1: 15
+
+library(caret)
+set.seed(1)
+idx = createFolds(y, k=10)
+idx[[3]][2]
+  sapply(idx,function(ind) table(g[ind])) ##make sure every fold has 0s and 1s
+
+q. 2.8.2: 1
+
+library(class)
+library(genefilter)
+m=8
+k=5
+ind = idx[[2]]
+pvals = rowttests(t(X[-ind,]),factor(y[-ind]))$p.val
+ind2 = order(pvals)[1:m]
+predict=knn(X[-ind,ind2],X[ind,ind2],y[-ind],k=k)
+sum(predict!=y[ind])
+
+q. 2.8.3: 0.375
+
+library(class)
+library(genefilter)
+m=8
+k=5
+result = sapply(idx,function(ind){
+  pvals = rowttests(t(X[-ind,]),factor(y[-ind]))$p.val
+  ind2 = order(pvals)[1:m]
+  predict=knn(X[-ind,ind2],X[ind,ind2],y[-ind],k=k)
+  sum(predict!=y[ind])
+})
+sum(result)/length(y)
+
+
+q. 2.8.4: k=3, m= 1024
+
+lerrors = apply(params,1,function(param){
+  k =  param[1]
+  m =  param[2]
+  result = sapply(idx,function(ind){
+    pvals = rowttests(t(X[-ind,]),factor(y[-ind]))$p.val
+    ind2 = order(pvals)[1:m]
+    predict=knn(X[-ind,ind2],X[ind,ind2],y[-ind],k=k)
+    sum(predict!=y[ind])
+  })
+  sum(result)/length(y)
+  })
+params[which.min(errors),]
+##make a plot and confirm its just one min:
+errors = matrix(errors,5,11)
+library(rafalib)
+mypar2(1,1)
+matplot(ms,t(errors),type="l",log="x")
+legend("topright",as.character(ks),lty=seq_along(ks),col=seq_along(ks))
+
+
+q. 2.8.5: 0.08333333
+
+pvals = rowttests(t(X),factor(y))$p.val
+errors = apply(params,1,function(param){
+  k =  param[1]
+  m =  param[2]
+  result = sapply(idx,function(ind){
+    ind2 = order(pvals)[1:m]
+    predict=knn(X[-ind,ind2],X[ind,ind2],y[-ind],k=k)
+    sum(predict!=y[ind])
+  })
+  sum(result)/length(y)
+  })
+min(errors)
+##make a plot and compare to previous question
+errors = matrix(errors,5,11)
+library(rafalib)
+mypar2(1,1)
+matplot(ms,t(errors),type="l",log="x")
+legend("topright",as.character(ks),lty=seq_along(ks),col=seq_along(ks))
+
+q. 2.8.6:  0
+
+errors = apply(params,1,function(param){
+  k =  param[1]
+  m =  param[2]
+  result = sapply(idx,function(ind){
+    pvals = rowttests(t(X[-ind,]),factor(y[-ind]))$p.val
+    ind2 = order(pvals)[1:m]
+    predict=knn(X[-ind,ind2],X[ind,ind2],y[-ind],k=k)
+    sum(predict!=y[ind])
+  })
+  sum(result)/length(y)
+  })
+min(errors)
+##make a plot and confirm its just one min:
+errors = matrix(errors,5,11)
+library(rafalib)
+mypar2(1,1)
+matplot(ms,t(errors),type="l",log="x")
+legend("topright",as.character(ks),lty=seq_along(ks),col=seq_along(ks))
