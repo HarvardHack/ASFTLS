@@ -1,0 +1,348 @@
+week 3.  Homework 5
+
+Components and Factor Analysis
+
+
+q. 3.1.1   0.3033351
+
+index = which(admissions$Gender==0)
+
+accepted= sum(admissions$Number[index] * admissions$Percent[index]/100)
+
+applied = sum(admissions$Number[index])
+
+accepted/applied
+
+
+
+
+q. 3.1.2  8.33652e-22
+
+index = admissions$Gender==1
+men = admissions[index,]
+women = admissions[!index,]
+menYes = sum(men$Number*men$Percent/100)
+menNo = sum(men$Number*(1-men$Percent/100))
+womenYes = sum(women$Number*men$Percent/100)
+womenNolibrary(qvalue)
+library(genefilter)
+year = factor( format(sampleInfo$date,"%y") )
+index = which(year%in% c("02","03") & sampleInfo$ethnicity=="CEU")
+year = droplevels(year[index])
+pval = rowttests(geneExpression[ ,index], year)$p.value
+qval = qvalue(pval)
+sum(qval$qvalue < 0.05) = sum(women$Number*(1-men$Percent/100))
+tab = matrix(c(menYes,womenYes,menNo,womenNo),2,2)
+chisq.test(tab)$p.value
+
+
+
+q.3.1.3 F
+
+major = admissions[1:6,1]
+men = admissions[1:6,]
+women =admissions[7:12,]
+H = (men$Number*men$Percent/100 + women$Number*women$Percent/100) / (men$Number+women$Number)
+major[which.min(H)]
+
+
+
+q.3.1.4  0.06477591
+
+major = admissions[1:6,1]
+men = admissions[1:6,]
+women =admissions[7:12,]
+H = (men$Number*men$Percent/100 + women$Number*women$Percent/100) / (men$Number+women$Number)
+min(H)
+
+
+
+q.3.1.5   There is confounding between gender and preference for "hard" majors: females are more likely to apply to harder majors. 
+
+0.7647567
+
+cor(H,men$Number)
+
+-0.6743393
+
+cor(H,women$Number)
+
+
+
+q. 3.2.1  2
+
+tab = table(year,sampleInfo$ethnicity)
+print(tab)
+x = rowSums( tab != 0)
+sum( x >= 2)
+
+
+
+q. 3.2.2 0.04761905
+
+tab = table(month.year,sampleInfo$ethnicity)
+print(tab)
+x = rowSums( tab != 0)
+mean( x >= 2)
+
+
+
+q.3.2.3  4310
+
+library(qvalue)
+library(genefilter)
+year = factor( format(sampleInfo$date,"%y") )
+index = which(year%in% c("02","03") & sampleInfo$ethnicity=="CEU")
+year = droplevels(year[index])
+pval = rowttests(geneExpression[ ,index], year)$p.value
+qval = qvalue(pval)
+sum(qval$qvalue < 0.05)
+
+
+
+q. 3.2.4  2463
+
+library(qvalue)
+library(genefilter)
+year = factor( format(sampleInfo$date,"%y") )
+index = which(year%in% c("03","04")  & sampleInfo$ethnicity=="CEU")
+year = droplevels(year[index])
+pval = rowttests(geneExpression[ ,index], year)$p.value
+qval = qvalue(pval)
+sum(qval$qvalue < 0.05) 
+
+
+
+q. 3.2.5 7201
+
+library(qvalue)
+library(genefilter)
+index = which(sampleInfo$ethnicity%in% c("CEU","ASN"))
+g = droplevels(sampleInfo$ethnicity[index])
+pval = rowttests(geneExpression[ ,index], g)$p.value
+qval = qvalue(pval)
+sum(qval$qvalue < 0.05)
+
+
+
+q. 3.2.6  560
+
+library(qvalue)
+library(genefilter)
+year = factor( format(sampleInfo$date,"%y") )
+index = which(sampleInfo$ethnicity%in% c("CEU","ASN") & year=="05")
+g = droplevels(sampleInfo$ethnicity[index])
+pval = rowttests(geneExpression[ ,index], g)$p.value
+qval = qvalue(pval)
+sum(qval$qvalue < 0.05)
+
+
+q. 3.2.7   3727
+
+library(qvalue)
+library(genefilter)
+year = factor( format(sampleInfo$date,"%y") )
+index1 = which(sampleInfo$ethnicity=="ASN" & year=="05")
+set.seed(3)
+index2 = sample( which(sampleInfo$ethnicity == "CEU" & year=="02"), 3)
+index = c( index1, index2)
+g = droplevels(sampleInfo$ethnicity[index])
+pval = rowttests(geneExpression[ ,index], g)$p.value
+qval = qvalue(pval)
+sum(qval$qvalue < 0.05)
+
+
+q. 3.3.1    41
+
+library(qvalue)
+library(genefilter)
+pvals = rowttests(geneExpression,factor(sampleInfo$g))$p.value
+qvals = qvalue(pvals)$qvalues
+sum(qvals<0.1)
+
+
+
+q. 3.3.2  0.4634146
+
+index = geneAnnotation$CHR[qvals<0.1]%in%c("chrX","chrY")
+mean(index)
+
+
+q. 3.3.3  0.9545455
+
+index = which(qvals<0.1 & !geneAnnotation$CHR%in%c("chrX","chrY"))
+month = factor( format(sampleInfo$date,"%m"))
+pvals = rowttests(geneExpression[index,],month)$p.value
+mean(pvals<0.05)
+
+
+q. 3.3.4  X = model.matrix(~sex+month) 
+
+
+q.3.3.5 16
+
+pvals = sapply(1:nrow(geneExpression),function(i){
+  y = geneExpression[i,]
+  fit = lm(y~X)
+  summary(fit)$coef[2,4]
+})
+qvals = qvalue(pvals)$qvalue
+sum(qvals<0.1)
+
+
+q. 3.3.6  
+0.875
+
+index = geneAnnotation$CHR[qvals<0.1]%in%c("chrX","chrY")
+mean(index)
+
+3183
+
+pvals = sapply(1:nrow(geneExpression),function(i){
+  y = geneExpression[i,]
+  fit = lm(y~X)
+  summary(fit)$coef[3,4]
+})
+qvals = qvalue(pvals)$qvalue
+sum(qvals<0.1)
+
+PROJECTIONS:
+
+   1  1
+ y
+   1 -1
+
+
+D are the coordinates of the projection U⊤Y
+
+
+3.4.1 The fact that in the plot ordered by month we see two groups mainly driven by month and within these, we see subgroups driven by date seems to suggest date more than month per se are the hidden factors. 
+
+##simple version
+library(rafalib)
+sex = sampleInfo$group
+mypar2(1,2)
+cors = cor(y)
+image(cors)
+o = order(sampleInfo$date)
+image(cors[o,o])
+
+##advanced version
+library(rafalib)
+sex = sampleInfo$group
+mypar2(1,2)
+cols=colorRampPalette(rev(brewer.pal(11,"RdBu")))(100)
+cors = cor(y)
+image(1:ncol(y),1:ncol(y),cors,col=cols,zlim=c(-1,1),
+       xaxt="n",xlab="",yaxt="n",ylab="")
+axis(2,1:ncol(y),sex,las=2)
+axis(1,1:ncol(y),sex,las=2)
+o = order(sampleInfo$date)
+image(1:ncol(y),1:ncol(y),cors[o,o],col=cols,zlim=c(-1,1),
+      xaxt="n",xlab="",yaxt="n",ylab="")
+label = gsub("2005-","",sampleInfo$date[o])
+axis(2,1:ncol(y),label,las=2)
+axis(1,1:ncol(y),label,las=2)
+
+3.4.2  pcs = svd(y)$v[,1:2] 
+
+3.4.3  June 23 and June 27 
+
+pcs = svd(y)$v[,1:2]
+o = order(sampleInfo$date)
+cols = as.numeric(month)[o]
+mypar2(2,1)
+for(i in 1:2){
+  plot(pcs[o,i],col=cols,xaxt="n",xlab="")
+  label = gsub("2005-","",sampleInfo$date[o])
+  axis(1,1:ncol(y),label,las=2)
+}
+
+
+3.4.4   2
+
+s = svd(y)
+varexplained = s$d^2/ sum(s$d^2)
+plot(varexplained)
+sum(varexplained>0.10)
+
+3.4.5  1
+
+month = factor( format(sampleInfo$date,"%m"))
+cors = cor( as.numeric(month),s$v)
+plot(t(cors))
+which.max(abs(cors))
+
+0.8297915
+
+max(abs(cors))
+
+3.4.6    1
+
+sex = sampleInfo$group
+cors = cor( sex,s$v)
+plot(t(cors))
+which.max(abs(cors))
+
+0.6236858
+
+max(abs(cors))
+
+3.4.7  14
+
+X= model.matrix(~sex+s$v[,1:2])
+pvals = sapply(1:nrow(geneExpression),function(i){
+  y = geneExpression[i,]
+  fit = lm(y~X)
+  summary(fit)$coef[2,4]
+})
+qvals = qvalue(pvals)$qvalue
+sum(qvals<0.1)
+
+1.0
+
+index = geneAnnotation$CHR[qvals<0.1]%in%c("chrX","chrY")
+mean(index)
+
+3.5.1  13
+
+library(qvalue)
+library(sva)
+X= model.matrix(~sex+svafit$sv)
+pvals = sapply(1:nrow(geneExpression),function(i){
+  y = geneExpression[i,]
+  fit = lm(y~X)
+  summary(fit)$coef[2,4]
+})
+qvals = qvalue(pvals)$qvalue
+sum(qvals<0.1)
+
+
+0.9230769
+
+
+index = geneAnnotation$CHR[qvals<0.1]%in%c("chrX","chrY")
+mean(index)
+
+
+res = sapply(1:nrow(geneExpression),function(i){
+	y = geneExpression[i,]
+	fit = lm(y~X)
+	summary(fit)$coef[2,c(1,4)]
+})
+
+qvals = qvalue(res[2,])$qvalue
+pcutoff = max( res[2,qvals < .1] )
+library(rafalib)
+mypar2(1,1)
+
+plot(res[1,],-log10(res[2,]),xlab="M",ylab="log10 p-value")
+
+ind = which(geneAnnotation$CHR=="chrY")
+points(res[1,ind],-log10(res[2,ind]),col=1,pch=16)
+
+ind = which(geneAnnotation$CHR=="chrX")
+points(res[1,ind],-log10(res[2,ind]),col=2,pch=16)
+
+abline(h=-log10(pcutoff))
+legend("bottomleft",c("chrX","chrY"),col=c(2,1),pch=16)
