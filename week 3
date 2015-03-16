@@ -98,6 +98,9 @@ pval = rowttests(geneExpression[ ,index], year)$p.value
 qval = qvalue(pval)
 sum(qval$qvalue < 0.05)
 
+0.3616984
+print( qvalue(pval)$pi0 )
+
 
 
 q. 3.2.4  2463
